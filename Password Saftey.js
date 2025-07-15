@@ -1,3 +1,4 @@
+import readline from "readline";
 import zxcvbn from "zxcvbn";
 
 function generateRandomPassword(length = 16) {
@@ -9,7 +10,7 @@ function generateRandomPassword(length = 16) {
   return password;
 }
 
-export async function checkPassword(password) {
+async function checkPassword(password) {
   const result = zxcvbn(password);
   const strengthScore = result.score;
   const strengthLabel = ["Weak", "Weak", "Fair", "Moderate", "Strong"][strengthScore];
@@ -36,18 +37,37 @@ export async function checkPassword(password) {
     }
   }
 
-  let suggestedPassword = null;
-  if (strengthScore < 3) {
-    do {
-      suggestedPassword = generateRandomPassword();
-    } while (zxcvbn(suggestedPassword).score < 3);
-  }
-
-  return {
-    strengthScore,
-    strengthLabel,
-    breachCount,
-    breached: breachCount > 0,
-    suggestedPassword
-  };
+  return { strengthScore, strengthLabel, breachCount, breached: breachCount > 0 };
 }
+
+function askQuestion(query) {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+  });
+  return new Promise(resolve => rl.question(query, ans => {
+    rl.close();
+    resolve(ans);
+  }));
+}
+
+async function main() {
+  const password = await askQuestion("Enter your password (not stored): ");
+  const { strengthScore, strengthLabel, breachCount, breached } = await checkPassword(password);
+
+  console.log(`\nPassword Strength: ${strengthLabel} (Score: ${strengthScore})`);
+  console.log(`Breached: ${breached ? `Yes, found ${breachCount} times` : "No"}`);
+
+  if (strengthScore < 3 || breached) {
+    const wantSuggestion = await askQuestion("Would you like a strong random password suggestion? (yes/no): ");
+    if (wantSuggestion.toLowerCase().startsWith("y")) {
+      let suggestedPassword;
+      do {
+        suggestedPassword = generateRandomPassword();
+      } while (zxcvbn(suggestedPassword).score < 3);
+      console.log("\nSuggested Strong Password:", suggestedPassword);
+    }
+  }
+}
+
+main();
