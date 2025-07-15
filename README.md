@@ -1,2 +1,3 @@
-# Password-Safety-Checker
-A simple script that checks the safety levels of you password and if needed you can request a password that will be different every time with high safety 
+# Password Safety Checker  
+> A straightforward tool that evaluates the strength and breach status of your password.  
+> If your password is weak, it provides a unique, highly secure password suggestion every time you request one.  
